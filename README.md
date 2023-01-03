@@ -3,6 +3,8 @@ ksc4cpp is a shellcode framework for windows kernel based on C++
 
 modified from sc4cpp
 
+Tested on Windows 10, Version 21H2
+
 ## Compiler
 Clang for Windows
 
