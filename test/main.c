@@ -7,14 +7,6 @@ void DriverUnload(PDRIVER_OBJECT DriverObject)
 {
     UNREFERENCED_PARAMETER(DriverObject);
 }
-//------------------------------------------------------------
-//-----------       Created with 010 Editor        -----------
-//------         www.sweetscape.com/010editor/          ------
-//
-// File    : D:\sec\code\ksc4cpp\build\Release\ksc4cpp.sc
-// Address : 0 (0x0)
-// Size    : 330 (0x14A)
-//------------------------------------------------------------
 unsigned char hexData[330] = {
     0xE9, 0x00, 0x00, 0x00, 0x00, 0x48, 0x83, 0xEC, 0x38, 0x48, 0xB8, 0x48, 0x65, 0x6C, 0x6C, 0x6F,
     0x2C, 0x20, 0x77, 0x48, 0x8D, 0x4C, 0x24, 0x28, 0x48, 0x89, 0x01, 0xC7, 0x41, 0x08, 0x6F, 0x72,
