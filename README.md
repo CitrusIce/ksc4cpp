@@ -10,7 +10,7 @@ Clang for Windows
 
 ## Compiler options
 ```
-/O2 /Os /MT /GS- /Gs1048576 -mno-sse-Wno-address-of-temporary
+/O2 /Os /MT /GS- /Gs1048576 -mno-sse -Wno-address-of-temporary
 ```
 ## Build using Cmake
 ```
