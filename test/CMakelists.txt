@@ -1,0 +1,6 @@
+project(shellcodetester)
+wdk_add_driver(shellcodetester main.c)
+# add custom command to sign the driver
+add_custom_command(TARGET shellcodetester POST_BUILD
+    COMMAND signtool sign /v /n WDKTestCert $<TARGET_FILE:shellcodetester>
+)
