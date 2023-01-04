@@ -17,7 +17,7 @@ Clang for Windows
 mkdir build
 cd build
 cmake ..
-# do not using Debug mode
+# do not use Debug mode
 cmake --build --config Release
 ```
 
