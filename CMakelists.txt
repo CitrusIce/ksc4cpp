@@ -3,18 +3,14 @@ project(ksc4cpp)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(WDK REQUIRED)
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/test")
 
 
 
-# add include directories
-include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
-
-
-function(my_wdk_add_driver _target)
+function(ksc4pp_add_shellcode _target)
     cmake_parse_arguments(WDK "" "KMDF;WINVER;NTDDI_VERSION" "" ${ARGN})
 
     add_executable(${_target} ${WDK_UNPARSED_ARGUMENTS})
+    # add include directories
 
     set_target_properties(${_target} PROPERTIES SUFFIX ".sys")
     set_target_properties(${_target} PROPERTIES COMPILE_OPTIONS "${WDK_COMPILE_FLAGS}")
@@ -27,6 +23,7 @@ function(my_wdk_add_driver _target)
         target_compile_definitions(${_target} PRIVATE NTDDI_VERSION=${WDK_NTDDI_VERSION})
     endif()
 
+    target_include_directories(${_target} PRIVATE ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/include)
     target_include_directories(${_target} SYSTEM PRIVATE
         "${WDK_ROOT}/Include/${WDK_INC_VERSION}/shared"
         "${WDK_ROOT}/Include/${WDK_INC_VERSION}/km"
@@ -39,49 +36,31 @@ function(my_wdk_add_driver _target)
         target_link_libraries(${_target} WDK::MEMCMP)
     endif()
 
+    set_property(TARGET ${_target} APPEND_STRING PROPERTY LINK_FLAGS "/ENTRY:SCBegin")
+
     if(DEFINED WDK_KMDF)
         target_include_directories(${_target} SYSTEM PRIVATE "${WDK_ROOT}/Include/wdf/kmdf/${WDK_KMDF}")
         target_link_libraries(${_target}
             "${WDK_ROOT}/Lib/wdf/kmdf/${WDK_PLATFORM}/${WDK_KMDF}/WdfDriverEntry.lib"
             "${WDK_ROOT}/Lib/wdf/kmdf/${WDK_PLATFORM}/${WDK_KMDF}/WdfLdr.lib"
         )
-
-        if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-            set_property(TARGET ${_target} APPEND_STRING PROPERTY LINK_FLAGS "/ENTRY:FxDriverEntry@8")
-        elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-            set_property(TARGET ${_target} APPEND_STRING PROPERTY LINK_FLAGS "/ENTRY:FxDriverEntry")
-        endif()
-    else()
-        if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-            set_property(TARGET ${_target} APPEND_STRING PROPERTY LINK_FLAGS "/ENTRY:SCBegin")
-        elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-            set_property(TARGET ${_target} APPEND_STRING PROPERTY LINK_FLAGS "/ENTRY:SCBegin")
-        endif()
     endif()
+
+    set_target_properties(${_target}
+        PROPERTIES
+        VS_PLATFORM_TOOLSET ClangCL)
+    set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-imsvc" PARENT_SCOPE)
+    set(CMAKE_INCLUDE_SYSTEM_FLAG_C "-imsvc" PARENT_SCOPE)
+
+    set(COMPILE_FLAGS "/O2" "/Os" "/MT" "/GS-" "/Gs1048576" "-mno-sse" "-Wno-address-of-temporary")
+    set_target_properties(${_target} PROPERTIES COMPILE_OPTIONS "${COMPILE_FLAGS}")
+
+
+    # add custom command to sign the driver
+    add_custom_command(TARGET ${_target} POST_BUILD
+        COMMAND py -3 "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/tools/scextractor.py" $<TARGET_FILE:${_target}>
+    )
 endfunction()
 
-my_wdk_add_driver(ksc4cpp
-    WINVER 0x0602
-    src/main.cpp
-)
-set_target_properties(ksc4cpp
-    PROPERTIES
-    VS_PLATFORM_TOOLSET ClangCL)
-set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-imsvc")
-set(CMAKE_INCLUDE_SYSTEM_FLAG_C "-imsvc")
-
-set(COMPILE_FLAGS "/O2" "/Os" "/MT" "/GS-" "/Gs1048576" "-mno-sse" "-Wno-address-of-temporary")
-set_target_properties(ksc4cpp PROPERTIES COMPILE_OPTIONS "${COMPILE_FLAGS}")
-
-# output compiler flags
-message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
-message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-
-# output target ksc4cpp COMPILE_OPTIONS
-get_target_property(ksc4cpp_COMPILE_OPTIONS ksc4cpp COMPILE_OPTIONS)
-message(STATUS "ksc4cpp_COMPILE_OPTIONS: ${ksc4cpp_COMPILE_OPTIONS}")
-
-# add custom command to sign the driver
-add_custom_command(TARGET ksc4cpp POST_BUILD
-    COMMAND py -3 "${CMAKE_CURRENT_SOURCE_DIR}/tools/scextractor.py"  $<TARGET_FILE:ksc4cpp>
-)
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/test/shellcode")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/test/shellcodetester")

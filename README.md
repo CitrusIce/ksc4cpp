@@ -10,9 +10,23 @@ Clang for Windows
 
 ## Compiler options
 ```
+must using clang-cl for compiling
 /O2 /Os /MT /GS- /Gs1048576 -mno-sse -Wno-address-of-temporary
 ```
 ## Build using Cmake
+
+cmake file:
+
+```cmake
+add_subdirectory("ksd4cpp")
+ksc4pp_add_shellcode(helloworld
+    WINVER 0x0602
+    shellcode.cpp
+)
+```
+
+build:
+
 ```
 mkdir build
 cd build

@@ -1,0 +1,4 @@
+ksc4pp_add_shellcode(helloworld
+    WINVER 0x0602
+    shellcode.cpp
+)
